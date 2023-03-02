@@ -7,8 +7,12 @@ import { AppCommandModule } from './app-command/app-command.module';
   imports: [
     NecordModule.forRoot({
       token:
-        'ODEwNDA2NjQyNzUxMjQyMjUw.G04mLU.eBkJG2bpLa4n8XJtea8Wy7IOmU6EPAIAXTUbVg',
-      intents: [GatewayIntentBits.Guilds],
+        'MTA4MDg3NjQwNzA5OTUwMjY3Mw.GJW3xL.21YSuZHs54mHRJEbGAeQJyRjAUJmJ_m5-jslMk',
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildVoiceStates,
+      ],
     }),
     AppCommandModule,
   ],
