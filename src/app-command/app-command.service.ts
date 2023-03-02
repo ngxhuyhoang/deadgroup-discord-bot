@@ -14,9 +14,12 @@ import {
   StreamType,
   createAudioResource,
   VoiceConnectionStatus,
+  NoSubscriberBehavior,
 } from '@discordjs/voice';
-import * as ytdl from 'ytdl-core';
-import { Channel } from 'discord.js';
+// import * as ytdl from 'ytdl-core';
+// import ytdl from 'ytdl-core-discord';
+import { Channel, ChannelType, Client } from 'discord.js';
+import play from 'play-dl';
 
 class OptionDto {
   @StringOption({
@@ -38,6 +41,8 @@ class ChannelDto {
 
 @Injectable()
 export class AppCommandService {
+  constructor(private readonly client: Client) {}
+
   @SlashCommand({
     name: 'ping',
     description: 'Ping-Pong Command',
@@ -78,16 +83,19 @@ export class AppCommandService {
     @Options() { keyword }: OptionDto,
   ) {
     try {
+      const channels = await interaction.guild.channels.fetch();
+      const voiceChannels = channels.find(
+        (c) => c.type === ChannelType.GuildVoice,
+      );
+
       const connection = joinVoiceChannel({
         // channelId: interaction.channelId,
-        channelId: '878281642702176330',
+        channelId: voiceChannels.id,
         adapterCreator: interaction.guild.voiceAdapterCreator,
         guildId: interaction.guildId,
         selfMute: false,
         selfDeaf: false,
       });
-
-      console.log(connection.state);
 
       connection.on(VoiceConnectionStatus.Signalling, () => {
         console.log('Signalling');
@@ -100,14 +108,29 @@ export class AppCommandService {
       });
 
       connection.on(VoiceConnectionStatus.Ready, async () => {
-        const stream = ytdl(keyword, {
-          filter: 'audioonly',
-          quality: 'highestaudio',
+        // const stream = await ytdl(keyword, {
+        //   filter: 'audioonly',
+        //   quality: 'highestaudio',
+        //   highWaterMark: 1 << 25,
+        //   dlChunkSize: 0,
+        // });
+        const youTubeInfo = await play.search(keyword, {
+          limit: 1,
+          source: {
+            youtube: 'video',
+            soundcloud: 'tracks',
+          },
         });
+
+        const { stream, type } = await play.stream(youTubeInfo[0].url);
         const resource = createAudioResource(stream, {
-          inputType: StreamType.Arbitrary,
+          inputType: type,
         });
-        const player = createAudioPlayer();
+        const player = createAudioPlayer({
+          behaviors: {
+            noSubscriber: NoSubscriberBehavior.Play,
+          },
+        });
         player.play(resource);
         connection.subscribe(player);
         return await interaction.reply(`Now playing: ${keyword}`);
