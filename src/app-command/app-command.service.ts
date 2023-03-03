@@ -16,7 +16,7 @@ import {
   AudioPlayerStatus,
 } from '@discordjs/voice';
 import * as ytdl from 'ytdl-core';
-import { ChannelType, Client } from 'discord.js';
+import { ChannelType, Client, VoiceState } from 'discord.js';
 import * as SoundCloud from 'soundcloud-scraper';
 import { exec } from 'child_process';
 
@@ -35,7 +35,30 @@ export class AppCommandService {
   private readonly _queue: string[] = [];
   private _currentPlaying: string;
 
-  constructor(private readonly client: Client) {}
+  constructor(private readonly client: Client) {
+    client.on(
+      'voiceStateUpdate',
+      async (oldState: VoiceState, newState: VoiceState) => {
+        const channel = await client.channels.fetch(newState.channelId);
+
+        if (newState.channelId === null) {
+          console.log('user left channel', oldState.channelId);
+          console.log('User: ', newState.member.user.username);
+          channel.;
+        } else if (oldState.channelId === null) {
+          console.log('user joined channel', newState.channelId);
+          console.log('User: ', newState.member.user.username);
+        } else {
+          console.log(
+            'user moved channels',
+            oldState.channelId,
+            newState.channelId,
+          );
+          console.log('User: ', newState.member.user.username);
+        }
+      },
+    );
+  }
 
   @SlashCommand({
     name: 'play',
@@ -110,7 +133,6 @@ export class AppCommandService {
 
         await interaction.followUp({
           content: `Đang phát: ${link}`,
-          ephemeral: true,
         });
       });
 
