@@ -13,9 +13,12 @@ import {
   createAudioResource,
   VoiceConnectionStatus,
   NoSubscriberBehavior,
+  AudioPlayerStatus,
 } from '@discordjs/voice';
 import * as ytdl from 'ytdl-core';
 import { ChannelType, Client } from 'discord.js';
+import * as SoundCloud from 'soundcloud-scraper';
+import { exec } from 'child_process';
 
 class OptionDto {
   @StringOption({
@@ -23,11 +26,15 @@ class OptionDto {
     description: 'Link from YouTube',
     required: true,
   })
-  keyword: string;
+  link: string;
 }
 
 @Injectable()
 export class AppCommandService {
+  private readonly _soundCloudClient = new SoundCloud.Client();
+  private readonly _queue: string[] = [];
+  private _currentPlaying: string;
+
   constructor(private readonly client: Client) {}
 
   @SlashCommand({
@@ -37,9 +44,11 @@ export class AppCommandService {
   public async onPlayYouTube(
     @Context() [interaction]: SlashCommandContext,
     @Options()
-    { keyword }: OptionDto,
+    { link }: OptionDto,
   ) {
     try {
+      await interaction.deferReply({ ephemeral: true });
+
       const channels = await interaction.guild.channels.fetch();
       const voiceChannels = channels.find(
         (c) => c.type === ChannelType.GuildVoice,
@@ -64,12 +73,23 @@ export class AppCommandService {
       });
 
       connection.on(VoiceConnectionStatus.Ready, async () => {
-        const stream = await ytdl(keyword, {
-          filter: 'audioonly',
-          quality: 'highestaudio',
-          highWaterMark: 1 << 25,
-          dlChunkSize: 0,
-        });
+        let stream;
+
+        if (link.includes('youtube') || link.includes('youtu.be')) {
+          stream = await ytdl(link, {
+            filter: 'audioonly',
+            quality: 'highestaudio',
+            highWaterMark: 1 << 25,
+            dlChunkSize: 0,
+          });
+          this._queue.push(link);
+        }
+
+        if (link.includes('soundcloud')) {
+          const track = await this._soundCloudClient.getSongInfo(link);
+          stream = await track.downloadProgressive();
+          this._queue.push(link);
+        }
 
         const resource = createAudioResource(stream, {
           inputType: StreamType.Arbitrary,
@@ -80,10 +100,17 @@ export class AppCommandService {
           },
         });
         player.play(resource);
+        player.on(AudioPlayerStatus.Playing, () => {
+          this._currentPlaying = link;
+        });
+        // player.on(AudioPlayerStatus.Idle, () => {
+        //   player.play(resource);
+        // });
         connection.subscribe(player);
 
-        return await interaction.reply({
-          content: `Đang phát: ${keyword}`,
+        await interaction.followUp({
+          content: `Đang phát: ${link}`,
+          ephemeral: true,
         });
       });
 
@@ -103,7 +130,7 @@ export class AppCommandService {
         newNetworking?.on('stateChange', networkStateChangeHandler);
       });
     } catch (error) {
-      console.log(error);
+      exec('killall node && cd $HOME/Code/deadgroup-bot && yarn start');
     }
   }
 }
