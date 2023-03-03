@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ChannelOption,
   Context,
-  MemberOption,
   Options,
   SlashCommand,
   SlashCommandContext,
@@ -16,27 +14,16 @@ import {
   VoiceConnectionStatus,
   NoSubscriberBehavior,
 } from '@discordjs/voice';
-// import * as ytdl from 'ytdl-core';
-// import ytdl from 'ytdl-core-discord';
-import { Channel, ChannelType, Client } from 'discord.js';
-import play from 'play-dl';
+import * as ytdl from 'ytdl-core';
+import { ChannelType, Client } from 'discord.js';
 
 class OptionDto {
   @StringOption({
-    name: 'query',
-    description: 'Query to search',
+    name: 'link',
+    description: 'Link from YouTube',
     required: true,
   })
   keyword: string;
-}
-
-class ChannelDto {
-  @ChannelOption({
-    name: 'channel',
-    description: 'Channel to join',
-    required: true,
-  })
-  channel: Channel;
 }
 
 @Injectable()
@@ -44,43 +31,13 @@ export class AppCommandService {
   constructor(private readonly client: Client) {}
 
   @SlashCommand({
-    name: 'ping',
-    description: 'Ping-Pong Command',
-  })
-  public async onPing(@Context() [interaction]: SlashCommandContext) {
-    return interaction.reply({ content: 'Pong!' });
-  }
-
-  @SlashCommand({
-    name: 'join',
-    description: 'Join Voice Channel',
-  })
-  public async onJoin(
-    @Context() [interaction]: SlashCommandContext,
-    @Options() { channel }: ChannelDto,
-  ) {
-    try {
-      console.log(channel);
-
-      const connection = joinVoiceChannel({
-        // channelId: interaction.channelId,
-        channelId: '878281642702176330',
-        adapterCreator: interaction.guild.voiceAdapterCreator,
-        guildId: interaction.guildId,
-      });
-      console.log(connection.state);
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  @SlashCommand({
     name: 'play',
     description: 'Play Music From YouTube',
   })
   public async onPlayYouTube(
     @Context() [interaction]: SlashCommandContext,
-    @Options() { keyword }: OptionDto,
+    @Options()
+    { keyword }: OptionDto,
   ) {
     try {
       const channels = await interaction.guild.channels.fetch();
@@ -89,7 +46,6 @@ export class AppCommandService {
       );
 
       const connection = joinVoiceChannel({
-        // channelId: interaction.channelId,
         channelId: voiceChannels.id,
         adapterCreator: interaction.guild.voiceAdapterCreator,
         guildId: interaction.guildId,
@@ -108,23 +64,15 @@ export class AppCommandService {
       });
 
       connection.on(VoiceConnectionStatus.Ready, async () => {
-        // const stream = await ytdl(keyword, {
-        //   filter: 'audioonly',
-        //   quality: 'highestaudio',
-        //   highWaterMark: 1 << 25,
-        //   dlChunkSize: 0,
-        // });
-        const youTubeInfo = await play.search(keyword, {
-          limit: 1,
-          source: {
-            youtube: 'video',
-            soundcloud: 'tracks',
-          },
+        const stream = await ytdl(keyword, {
+          filter: 'audioonly',
+          quality: 'highestaudio',
+          highWaterMark: 1 << 25,
+          dlChunkSize: 0,
         });
 
-        const { stream, type } = await play.stream(youTubeInfo[0].url);
         const resource = createAudioResource(stream, {
-          inputType: type,
+          inputType: StreamType.Arbitrary,
         });
         const player = createAudioPlayer({
           behaviors: {
@@ -133,7 +81,26 @@ export class AppCommandService {
         });
         player.play(resource);
         connection.subscribe(player);
-        return await interaction.reply(`Now playing: ${keyword}`);
+
+        return await interaction.reply({
+          content: `Đang phát: ${keyword}`,
+        });
+      });
+
+      connection.on('stateChange', (oldState, newState) => {
+        const oldNetworking = Reflect.get(oldState, 'networking');
+        const newNetworking = Reflect.get(newState, 'networking');
+
+        const networkStateChangeHandler = (
+          oldNetworkState,
+          newNetworkState,
+        ) => {
+          const newUdp = Reflect.get(newNetworkState, 'udp');
+          clearInterval(newUdp?.keepAliveInterval);
+        };
+
+        oldNetworking?.off('stateChange', networkStateChangeHandler);
+        newNetworking?.on('stateChange', networkStateChangeHandler);
       });
     } catch (error) {
       console.log(error);

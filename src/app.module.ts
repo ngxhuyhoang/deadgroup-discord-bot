@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { GatewayIntentBits } from 'discord.js';
 import { NecordModule } from 'necord';
 import { AppCommandModule } from './app-command/app-command.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     NecordModule.forRoot({
-      token:
-        'MTA4MDg3NjQwNzA5OTUwMjY3Mw.GJW3xL.21YSuZHs54mHRJEbGAeQJyRjAUJmJ_m5-jslMk',
+      token: process.env.TOKEN,
       intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
