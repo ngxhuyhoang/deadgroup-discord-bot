@@ -47,7 +47,7 @@ export class AppCommandService {
     { link }: OptionDto,
   ) {
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ ephemeral: false });
 
       const channels = await interaction.guild.channels.fetch();
       const voiceChannels = channels.find(
@@ -110,7 +110,7 @@ export class AppCommandService {
 
         await interaction.followUp({
           content: `Đang phát: ${link}`,
-          ephemeral: true,
+          ephemeral: false,
         });
       });
 
