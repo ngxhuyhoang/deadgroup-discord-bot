@@ -44,7 +44,6 @@ export class AppCommandService {
         if (newState.channelId === null) {
           console.log('user left channel', oldState.channelId);
           console.log('User: ', newState.member.user.username);
-          channel.;
         } else if (oldState.channelId === null) {
           console.log('user joined channel', newState.channelId);
           console.log('User: ', newState.member.user.username);
