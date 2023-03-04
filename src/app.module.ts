@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { GatewayIntentBits } from 'discord.js';
 import { NecordModule } from 'necord';
 import { AppCommandModule } from './app-command/app-command.module';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -17,5 +18,6 @@ import { AppCommandModule } from './app-command/app-command.module';
     }),
     AppCommandModule,
   ],
+  providers: [AppService],
 })
 export class AppModule {}

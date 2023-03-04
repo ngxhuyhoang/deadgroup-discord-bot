@@ -36,27 +36,27 @@ export class AppCommandService {
   private _currentPlaying: string;
 
   constructor(private readonly client: Client) {
-    client.on(
-      'voiceStateUpdate',
-      async (oldState: VoiceState, newState: VoiceState) => {
-        const channel = await client.channels.fetch(newState.channelId);
+    // client.on(
+    //   'voiceStateUpdate',
+    //   async (oldState: VoiceState, newState: VoiceState) => {
+    //     const channel = await client.channels.fetch(newState.channelId);
 
-        if (newState.channelId === null) {
-          console.log('user left channel', oldState.channelId);
-          console.log('User: ', newState.member.user.username);
-        } else if (oldState.channelId === null) {
-          console.log('user joined channel', newState.channelId);
-          console.log('User: ', newState.member.user.username);
-        } else {
-          console.log(
-            'user moved channels',
-            oldState.channelId,
-            newState.channelId,
-          );
-          console.log('User: ', newState.member.user.username);
-        }
-      },
-    );
+    //     if (newState.channelId === null) {
+    //       console.log('user left channel', oldState.channelId);
+    //       console.log('User: ', newState.member.user.username);
+    //     } else if (oldState.channelId === null) {
+    //       console.log('user joined channel', newState.channelId);
+    //       console.log('User: ', newState.member.user.username);
+    //     } else {
+    //       console.log(
+    //         'user moved channels',
+    //         oldState.channelId,
+    //         newState.channelId,
+    //       );
+    //       console.log('User: ', newState.member.user.username);
+    //     }
+    //   },
+    // );
   }
 
   @SlashCommand({
