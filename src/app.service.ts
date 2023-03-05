@@ -18,27 +18,27 @@ export class AppService {
     @Context() [oldState, newState]: ContextOf<'voiceStateUpdate'>,
   ) {
     if (newState.channelId === null) {
-      const channel = await this.client.channels.fetch(oldState.channelId);
+      // const channel = await this.client.channels.fetch(oldState.channelId);
 
-      console.log('user left channel', oldState.channelId);
-      console.log('User:', newState.member.user.username);
-      this.client.user.send(
-        `Tôi vừa phát hiện ${newState.member.user.username} thoát`,
-      );
+      // console.log('user left channel', oldState.channelId);
+      // console.log('User:', newState.member.user.username);
+      // this.client.user.send(
+      //   `Tôi vừa phát hiện ${newState.member.user.username} thoát`,
+      // );
       return;
     }
     if (oldState.channelId === null) {
-      const channel = await this.client.channels.fetch(newState.channelId);
+      // const channel = await this.client.channels.fetch(newState.channelId);
 
-      console.log('user joined channel', newState.channelId);
-      console.log('User:', newState.member.user.username);
-      this.client.user.send(
-        `Tôi vừa phát hiện ${newState.member.user.username} vào`,
-      );
+      // console.log('user joined channel', newState.channelId);
+      // console.log('User:', newState.member.user.username);
+      // this.client.user.send(
+      //   `Tôi vừa phát hiện ${newState.member.user.username} vào`,
+      // );
       return;
     }
 
-    console.log('user moved channels', oldState.channelId, newState.channelId);
-    console.log('User:', newState.member.user.username);
+    // console.log('user moved channels', oldState.channelId, newState.channelId);
+    // console.log('User:', newState.member.user.username);
   }
 }
