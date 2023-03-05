@@ -1,6 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Client, VoiceState } from 'discord.js';
-import { Context, ContextOf, On, Once } from 'necord';
+import { Client } from 'discord.js';
+import {
+  Context,
+  ContextOf,
+  On,
+  Once,
+  SlashCommand,
+  SlashCommandContext,
+} from 'necord';
 
 @Injectable()
 export class AppService {
@@ -40,5 +47,26 @@ export class AppService {
 
     // console.log('user moved channels', oldState.channelId, newState.channelId);
     // console.log('User:', newState.member.user.username);
+  }
+
+  @SlashCommand({
+    name: 'restart',
+    description: 'Restart the bot',
+  })
+  public async restart(@Context() [interaction]: SlashCommandContext) {
+    await interaction.deferReply();
+    await interaction.followUp({ content: 'Tôi restart đây' });
+    await this.client.destroy();
+    await this.client.login(process.env.TOKEN);
+  }
+
+  @SlashCommand({
+    name: 'shutdown',
+    description: 'Shutdown the bot',
+  })
+  public async shutdown(@Context() [interaction]: SlashCommandContext) {
+    await interaction.deferReply();
+    await interaction.followUp({ content: 'Tôi Shutdown đây' });
+    await this.client.destroy();
   }
 }
