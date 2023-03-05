@@ -84,7 +84,6 @@ export class AppCommandService {
       this._voiceConnection.on(VoiceConnectionStatus.Ready, async () => {
         const stream = await this._getStream(link);
         if (!stream) return;
-        await interaction.deferReply({ ephemeral: false });
         await this._playTrack(stream);
         this._player.on(AudioPlayerStatus.Playing, () =>
           this._handlePlaying(link, interaction),
@@ -113,37 +112,6 @@ export class AppCommandService {
     } catch (error) {
       this.logger.error(error);
     }
-  }
-
-  @SlashCommand({
-    name: 'queue',
-    description: 'List track on queue',
-  })
-  public async getQueue(@Context() [interaction]: SlashCommandContext) {
-    await interaction.deferReply({ ephemeral: false });
-
-    if (!this._queue.length) {
-      await interaction.followUp({
-        content: 'Hàng chờ trống',
-      });
-      return;
-    }
-
-    await interaction.followUp({
-      content: `Hàng chờ: \n${this._queue.join('\n')}`,
-    });
-  }
-
-  @SlashCommand({
-    name: 'clear',
-    description: 'Clear queue',
-  })
-  public async clearQueue(@Context() [interaction]: SlashCommandContext) {
-    this._queue = [];
-    await interaction.deferReply({ ephemeral: false });
-    await interaction.followUp({
-      content: `Đã xóa hết nhạc`,
-    });
   }
 
   @SlashCommand({
